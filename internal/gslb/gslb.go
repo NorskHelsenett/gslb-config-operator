@@ -1,11 +1,13 @@
 package gslb
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/base32"
 	"fmt"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -66,7 +68,7 @@ func For(c client.Client, gslb *v1alpha1.GSLBService) (Target, error) {
 
 // BuildConfig assembles the GSLBConfig TXT payload from the GSLBService spec and
 // the resolved member details.
-func BuildConfig(gslb *v1alpha1.GSLBService, member *Member) *models.GSLBConfig {
+func BuildConfig(c client.Client, gslb *v1alpha1.GSLBService, member *Member) (*models.GSLBConfig, error) {
 	cfg := &models.GSLBConfig{
 		MemberOf:   member.MemberOf,
 		Address:    member.Address,
@@ -89,10 +91,24 @@ func BuildConfig(gslb *v1alpha1.GSLBService, member *Member) *models.GSLBConfig 
 		if hc.Lua != nil {
 			script := models.LuaScript(*hc.Lua)
 			cfg.Script = &script
+		} else if hc.LuaRef != nil {
+			configMap := corev1.ConfigMap{}
+			err := c.Get(context.Background(), client.ObjectKey{Name: hc.LuaRef.TargetRef}, &configMap)
+			if err != nil {
+				return nil, fmt.Errorf("failed to resolve lua configmap reference: %w", err)
+			}
+
+			rawScript, ok := configMap.Data[hc.LuaRef.Key]
+			if !ok {
+				return nil, fmt.Errorf("failed to resolve lua script in configmap: key %s does not exist", hc.LuaRef.Key)
+			}
+
+			script := models.LuaScript(rawScript)
+			cfg.Script = &script
 		}
 	}
 
-	return cfg
+	return cfg, nil
 }
 
 var idEncoding = base32.StdEncoding.WithPadding(base32.NoPadding)

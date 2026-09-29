@@ -85,7 +85,13 @@ func (r *GSLBServiceReconciler) reconcileConfig(_ context.Context, rc *reconcile
 		svc.Status.Member.ID = gslb.ServiceID(svc) + "-" + config.Server().Cluster()
 	}
 
-	rc.config = gslb.BuildConfig(svc, rc.member)
+	cfg, err := gslb.BuildConfig(r.Client, svc, rc.member)
+	if err != nil {
+		setCondition(svc, conditionAccepted, metav1.ConditionFalse, "GSLBConfigGenerationFailed", err.Error())
+		return ctrl.Result{RequeueAfter: requeueAfter}, nil
+	}
+
+	rc.config = cfg
 	rc.config.ServiceID = svc.Status.Member.ID
 	svc.Status.Member.MemberOf = rc.config.MemberOf
 
