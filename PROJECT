@@ -6,6 +6,10 @@ cliVersion: 4.14.0
 domain: nhn.no
 layout:
 - go.kubebuilder.io/v4
+plugins:
+  helm.kubebuilder.io/v2-alpha:
+    manifests: dist/install.yaml
+    output: charts
 projectName: gslb-config-operator
 repo: github.com/NorskHelsenett/gslb-config-operator
 resources:

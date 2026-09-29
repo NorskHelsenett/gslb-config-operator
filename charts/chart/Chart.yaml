@@ -1,0 +1,14 @@
+apiVersion: v2
+name: gslb-config-operator
+description: A Helm chart to distribute gslb-config-operator
+type: application
+
+version: 0.1.0
+appVersion: "0.1.0"
+
+keywords:
+  - kubernetes
+  - operator
+
+annotations:
+  kubebuilder.io/generated-by: kubebuilder
