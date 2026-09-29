@@ -29,6 +29,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
@@ -197,10 +198,16 @@ func main() {
 	client := g3.NewClient(dnsRestTransport)
 
 	if runInit {
-		if err := initalize.Run(client, mgr.GetClient()); err != nil {
+		initClient, err := ctrlclient.New(mgr.GetConfig(), ctrlclient.Options{Scheme: mgr.GetScheme()})
+		if err != nil {
+			setupLog.Error(err, "Failed to create client for init job")
+			os.Exit(1)
+		}
+		if err := initalize.Run(client, initClient); err != nil {
 			setupLog.Error(err, "init job failed")
 			os.Exit(1)
 		}
+		return
 	}
 
 	if err := (&controller.GSLBServiceReconciler{

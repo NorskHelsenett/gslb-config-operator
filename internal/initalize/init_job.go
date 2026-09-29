@@ -7,7 +7,7 @@ import (
 
 	"github.com/NorskHelsenett/gslb-config-operator/internal/config"
 	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns"
-	clusterinterregator "github.com/NorskHelsenett/ror/pkg/kubernetes/interregators/clusterinterregator/v3"
+	"github.com/NorskHelsenett/ror/pkg/kubernetes/interregators/clusterinterregator/v3"
 	"github.com/NorskHelsenett/ror/pkg/kubernetes/interregators/interregatortypes/v3"
 	"go.yaml.in/yaml/v3"
 	corev1 "k8s.io/api/core/v1"
@@ -17,7 +17,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=secrets,resourceNames=nhn-dns-updater,verbs=get;list;
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
 func Run(dnsClient dns.Client, k8sClient client.Client) error {
 	restConfig := ctrl.GetConfigOrDie()
@@ -36,8 +36,11 @@ func Run(dnsClient dns.Client, k8sClient client.Client) error {
 
 func mergeConfig(ctx context.Context, k8sClient client.Client, interregator interregatortypes.ClusterInterregator) error {
 	cm := &corev1.ConfigMap{}
-	key := client.ObjectKey{Namespace: os.Getenv("POD_NAMESPACE"), Name: ""}
+	key := client.ObjectKey{Namespace: os.Getenv("POD_NAMESPACE"), Name: os.Getenv("GSLB_CONFIGMAP_NAME")}
 
+	datacenter := interregator.GetDatacenter()
+	clusterID := interregator.GetClusterId()
+	
 	if err := k8sClient.Get(ctx, key, cm); err != nil {
 		if apierrors.IsNotFound(err) {
 			return fmt.Errorf("configmap %s not found", key)
@@ -57,8 +60,6 @@ func mergeConfig(ctx context.Context, k8sClient client.Client, interregator inte
 		server = make(map[string]any)
 	}
 
-	datacenter := interregator.GetDatacenter()
-	clusterID := interregator.GetClusterId()
 	if server["datacenter"] == datacenter && server["clusterID"] == clusterID {
 		return nil // already up to date
 	}
@@ -92,10 +93,10 @@ func ensureDNSCredentials(ctx context.Context, k8sClient client.Client) error {
 
 	path := os.Getenv("DNS_UPDATER_CREDS_FILE")
 	if path == "" {
-		path = "./secrets/DNS_UPDATER_CREDS_FILE"
+		path = "./secrets/DNS_UPDATER_CREDS"
 	}
 
-	if info, err := os.Stat(path); err != nil && info.Size() > 0 {
+	if info, err := os.Stat(path); err == nil && info.Size() > 0 {
 		return nil
 	} else if err != nil && !os.IsNotExist(err) {
 		return fmt.Errorf("checking %s: %w", path, err)
@@ -107,6 +108,7 @@ func ensureDNSCredentials(ctx context.Context, k8sClient client.Client) error {
 		if apierrors.IsNotFound(err) {
 			return fmt.Errorf("secret %s not found", key)
 		}
+		return fmt.Errorf("fetching updater secret: %w", err)
 	}
 
 	creds, ok := secret.Data["clusterKey"]
