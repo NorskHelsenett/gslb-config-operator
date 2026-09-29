@@ -1,9 +1,0 @@
-apiVersion: gslb.vitistack.io/v1alpha1
-kind: GslbConfig
-metadata:
-  labels:
-    app.kubernetes.io/name: gslb-config-operator
-    app.kubernetes.io/managed-by: kustomize
-  name: gslbconfig-sample
-spec:
-  # TODO(user): Add fields here

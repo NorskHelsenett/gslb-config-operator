@@ -1,4 +1,4 @@
 ## Append samples of your project ##
 resources:
-- gslb_v1alpha1_gslbconfig.yaml
+- lb_v1alpha1_gslbservice.yaml
 # +kubebuilder:scaffold:manifestskustomizesamples

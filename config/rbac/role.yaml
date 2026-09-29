@@ -5,9 +5,27 @@ metadata:
   name: manager-role
 rules:
 - apiGroups:
-  - gslb.vitistack.io
+  - ""
   resources:
-  - gslbconfigs
+  - services
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - gateway.networking.k8s.io
+  resources:
+  - gateways
+  - httproutes
+  - tcproutes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - lb.nhn.no
+  resources:
+  - gslbservices
   verbs:
   - create
   - delete
@@ -17,15 +35,15 @@ rules:
   - update
   - watch
 - apiGroups:
-  - gslb.vitistack.io
+  - lb.nhn.no
   resources:
-  - gslbconfigs/finalizers
+  - gslbservices/finalizers
   verbs:
   - update
 - apiGroups:
-  - gslb.vitistack.io
+  - lb.nhn.no
   resources:
-  - gslbconfigs/status
+  - gslbservices/status
   verbs:
   - get
   - patch

@@ -22,7 +22,8 @@ resources:
 # default, aiding admins in cluster management. Those roles are
 # not used by the gslb-config-operator itself. You can comment the following lines
 # if you do not want those helpers be installed with your Project.
-- gslbconfig_admin_role.yaml
-- gslbconfig_editor_role.yaml
-- gslbconfig_viewer_role.yaml
+- gslbservice_admin_role.yaml
+- gslbservice_editor_role.yaml
+- gslbservice_viewer_role.yaml
+
 

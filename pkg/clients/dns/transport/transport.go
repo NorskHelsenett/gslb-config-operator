@@ -9,4 +9,3 @@ type Transport interface {
 	PatchJSON(ctx context.Context, path string, body, out any) error
 	Delete(ctx context.Context, path string) error
 }
-

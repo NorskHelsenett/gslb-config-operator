@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"codeberg.org/miekg/dns"
-	"codeberg.org/miekg/dns/rdata"
 	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/g3/models"
 	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/records"
 	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/transport"
@@ -45,6 +44,10 @@ func (a *G3RecordsAdapter) Read(opts ...records.ReadOption) ([]records.RecordReq
 		return nil, err
 	}
 
+	if g3Page == nil {
+		return []records.RecordRequest{}, nil
+	}
+
 	records := make([]records.RecordRequest, 0, len(g3Page.Items))
 	for _, item := range g3Page.Items {
 		records = append(records, a.decode(item))
@@ -67,10 +70,12 @@ func (a *G3RecordsAdapter) Update(id string, record records.RecordRequest) error
 	if err != nil {
 		return fmt.Errorf("could not update record with id: %s: %w", id, err)
 	}
-	*g3Record.Id, err = strconv.Atoi(id)
+	intID, err := strconv.Atoi(id)
 	if err != nil {
 		return fmt.Errorf("failed to convert id to integer: %s: %w", id, err)
 	}
+
+	g3Record.Id = &intID
 	_, err = a.client.Update(g3Record)
 	return err
 }
@@ -118,17 +123,17 @@ func (a *G3RecordsAdapter) decode(record models.G3Record) records.RecordRequest 
 	switch record.Type {
 	case models.DNSRecordTypeA:
 		addr, _ := netip.ParseAddr(record.Address)
-		rr = &dns.A{Hdr: hdr, A: rdata.A{Addr: addr.Unmap()}}
+		rr = &dns.A{Hdr: hdr, Addr: addr.Unmap()}
 	case models.DNSRecordTypeAAAA:
 		addr, _ := netip.ParseAddr(record.Address)
-		rr = &dns.AAAA{Hdr: hdr, AAAA: rdata.AAAA{Addr: addr}}
+		rr = &dns.AAAA{Hdr: hdr, Addr: addr}
 	case models.DNSRecordTypeTXT:
-		txt := strings.TrimPrefix(record.Address, `\"`)
-		txt = strings.TrimSuffix(txt, `\"`)
+		txt := strings.TrimPrefix(record.Address, `"`)
+		txt = strings.TrimSuffix(txt, `"`)
 		txt = strings.ReplaceAll(txt, `\"`, `"`)
-		rr = &dns.TXT{Hdr: hdr, TXT: rdata.TXT{Txt: []string{txt}}}
+		rr = &dns.TXT{Hdr: hdr, Txt: []string{txt}}
 	case models.DNSRecordTypeNS:
-		rr = &dns.NS{Hdr: hdr, NS: rdata.NS{Ns: record.Address}}
+		rr = &dns.NS{Hdr: hdr, Ns: record.Address}
 	}
 
 	var recordID string

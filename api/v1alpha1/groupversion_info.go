@@ -14,9 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package v1alpha1 contains API Schema definitions for the gslb v1alpha1 API group.
+// Package v1alpha1 contains API Schema definitions for the lb v1alpha1 API group.
 // +kubebuilder:object:generate=true
-// +groupName=gslb.vitistack.io
+// +groupName=lb.nhn.no
 package v1alpha1
 
 import (
@@ -27,7 +27,7 @@ import (
 var (
 	// SchemeGroupVersion is group version used to register these objects.
 	// This name is used by applyconfiguration generators (e.g. controller-gen).
-	SchemeGroupVersion = schema.GroupVersion{Group: "gslb.vitistack.io", Version: "v1alpha1"}
+	SchemeGroupVersion = schema.GroupVersion{Group: "lb.nhn.no", Version: "v1alpha1"}
 
 	// GroupVersion is an alias for SchemeGroupVersion, for backward compatibility.
 	GroupVersion = SchemeGroupVersion

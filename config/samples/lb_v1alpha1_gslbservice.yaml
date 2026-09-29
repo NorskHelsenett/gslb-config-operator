@@ -1,0 +1,27 @@
+apiVersion: lb.nhn.no/v1alpha1
+kind: GSLBService
+metadata:
+  labels:
+    app.kubernetes.io/name: gslb-config-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: gslbservice-sample
+spec:
+  member:
+    targetRef:
+      kind: HTTPRoute/TCPRoute/Service
+      name: name
+      namespace: namespace # optional
+    healthChecks:
+      failureThreshold: int # optional
+      lua: | # optional inline lua function for healthcheck
+        return true
+      luaRef: # optional
+        targetRef: ConfigMap
+        key: luascript-key
+      kind: HTTPS/TCP-FULL/TCP-HALF/LUA # drafted from target-ref, set manually, or derived from lua/luaRef
+      path: URI-string # optional
+  global:
+    priority: 1-N
+    views: # derived from httproute parentRef, or read from httproute annotation, optional
+      - inet
+      - hnet

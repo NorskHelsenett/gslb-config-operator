@@ -3,8 +3,9 @@ package rest
 import "net/http"
 
 type HTTPError struct {
-	err      error
-	Response *http.Response
+	err        error
+	StatusCode int
+	Response   *http.Response
 }
 
 func (e *HTTPError) Error() string {

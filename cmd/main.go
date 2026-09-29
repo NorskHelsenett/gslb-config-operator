@@ -34,9 +34,16 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics/filters"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 
 	gslbv1alpha1 "github.com/NorskHelsenett/gslb-config-operator/api/v1alpha1"
+	lbv1alpha1 "github.com/NorskHelsenett/gslb-config-operator/api/v1alpha1"
+	"github.com/NorskHelsenett/gslb-config-operator/internal/config"
 	"github.com/NorskHelsenett/gslb-config-operator/internal/controller"
+	"github.com/NorskHelsenett/gslb-config-operator/internal/initalize"
+	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/g3"
+	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/transport/intercept"
+	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/transport/rest"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -49,11 +56,14 @@ func init() {
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	utilruntime.Must(gslbv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(lbv1alpha1.AddToScheme(scheme))
+	utilruntime.Must(gatewayv1.Install(scheme))
 	// +kubebuilder:scaffold:scheme
 }
 
 // nolint:gocyclo
 func main() {
+	var runInit bool
 	var metricsAddr string
 	var metricsCertPath, metricsCertName, metricsCertKey string
 	var webhookCertPath, webhookCertName, webhookCertKey string
@@ -62,6 +72,8 @@ func main() {
 	var secureMetrics bool
 	var enableHTTP2 bool
 	var tlsOpts []func(*tls.Config)
+	flag.BoolVar(&runInit, "init", false,
+		"Run one-shot initialization (verify DNS backend and config zone) then exit, instead of starting the controller.")
 	flag.StringVar(&metricsAddr, "metrics-bind-address", "0", "The address the metrics endpoint binds to. "+
 		"Use :8443 for HTTPS or :8080 for HTTP, or leave as 0 to disable the metrics service.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
@@ -160,7 +172,7 @@ func main() {
 		WebhookServer:          webhookServer,
 		HealthProbeBindAddress: probeAddr,
 		LeaderElection:         enableLeaderElection,
-		LeaderElectionID:       "ce033bf6.vitistack.io",
+		LeaderElectionID:       "ce033bf6.lb.nhn.no",
 		// LeaderElectionReleaseOnCancel defines if the leader should step down voluntarily
 		// when the Manager ends. This requires the binary to immediately end when the
 		// Manager is stopped, otherwise, this setting is unsafe. Setting this significantly
@@ -178,13 +190,35 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := (&controller.GslbConfigReconciler{
+	dnsRestTransport := rest.NewTransport(
+		config.DNS().UpdaterURL(),
+		intercept.WithAuth("X-Auth", config.DNS().Credentials()),
+	)
+	client := g3.NewClient(dnsRestTransport)
+
+	if runInit {
+		if err := initalize.Run(client, mgr.GetClient()); err != nil {
+			setupLog.Error(err, "init job failed")
+			os.Exit(1)
+		}
+	}
+
+	if err := (&controller.GSLBServiceReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
+		DNS:    client,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "Failed to create controller", "controller", "gslbconfig")
+		setupLog.Error(err, "Failed to create controller", "controller", "gslbservice")
 		os.Exit(1)
 	}
+
+	// nolint:goconst
+	//if os.Getenv("ENABLE_WEBHOOKS") != "false" {
+	//	if err := webhookv1alpha1.SetupGSLBServiceWebhookWithManager(mgr); err != nil {
+	//		setupLog.Error(err, "Failed to create webhook", "webhook", "GSLBService")
+	//		os.Exit(1)
+	//	}
+	//}
 	// +kubebuilder:scaffold:builder
 
 	if err := mgr.AddHealthzCheck("healthz", healthz.Ping); err != nil {

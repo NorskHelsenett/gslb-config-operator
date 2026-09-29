@@ -2,15 +2,18 @@ package records
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net/http"
 	"net/url"
 
 	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/g3/models"
 	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/transport"
+	"github.com/NorskHelsenett/gslb-config-operator/pkg/clients/dns/transport/rest"
 )
 
 type Client interface {
-	Read(url.Values) (models.G3PaginatedResponse, error)
+	Read(url.Values) (*models.G3PaginatedResponse, error)
 	Create(models.G3Record) (models.G3MutationResponse, error)
 	Update(models.G3Record) (models.G3MutationResponse, error)
 	Delete(id string) error
@@ -28,13 +31,17 @@ func NewRecordsClient(transport transport.Transport) Client {
 	}
 }
 
-func (r *recordsClient) Read(params url.Values) (models.G3PaginatedResponse, error) {
-	page := models.G3PaginatedResponse{}
+func (r *recordsClient) Read(params url.Values) (*models.G3PaginatedResponse, error) {
+	page := &models.G3PaginatedResponse{}
 
-	err := r.transport.GetJSON(context.Background(), r.path+"s?"+params.Encode(), &page)
+	err := r.transport.GetJSON(context.Background(), r.path+"s?"+params.Encode(), page)
 	if err != nil {
-		return models.G3PaginatedResponse{}, fmt.Errorf("failed to fetch records: %w", err)
+		if httpErr, ok := errors.AsType[*rest.HTTPError](err); ok && httpErr.StatusCode == http.StatusNotFound {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}
+
 	return page, nil
 }
 

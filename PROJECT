@@ -3,7 +3,7 @@
 # and allow the plugins properly work.
 # More info: https://book.kubebuilder.io/reference/project-config.html
 cliVersion: 4.14.0
-domain: vitistack.io
+domain: nhn.no
 layout:
 - go.kubebuilder.io/v4
 projectName: gslb-config-operator
@@ -13,9 +13,13 @@ resources:
     crdVersion: v1
     namespaced: true
   controller: true
-  domain: vitistack.io
-  group: gslb
-  kind: GslbConfig
+  domain: nhn.no
+  group: lb
+  kind: GSLBService
   path: github.com/NorskHelsenett/gslb-config-operator/api/v1alpha1
   version: v1alpha1
+  webhooks:
+    defaulting: true
+    validation: true
+    webhookVersion: v1
 version: "3"

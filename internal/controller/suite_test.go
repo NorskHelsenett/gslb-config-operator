@@ -34,6 +34,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	gslbv1alpha1 "github.com/NorskHelsenett/gslb-config-operator/api/v1alpha1"
+	lbv1alpha1 "github.com/NorskHelsenett/gslb-config-operator/api/v1alpha1"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -61,6 +62,9 @@ var _ = BeforeSuite(func() {
 
 	var err error
 	err = gslbv1alpha1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = lbv1alpha1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	// +kubebuilder:scaffold:scheme
