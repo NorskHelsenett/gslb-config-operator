@@ -177,3 +177,7 @@ webhook:
 prometheus:
   enable: false
 
+  initJob:
+    enabled: true
+    # Name of the ConfigMap containing config.yaml (required when enabled)
+    configMapName: ""
