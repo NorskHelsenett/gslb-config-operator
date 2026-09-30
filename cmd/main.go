@@ -62,6 +62,11 @@ func init() {
 	// +kubebuilder:scaffold:scheme
 }
 
+var (
+	version string
+	buildDate string
+)
+
 // nolint:gocyclo
 func main() {
 	var runInit bool
@@ -99,6 +104,7 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+	setupLog.Info("running GSLBServices operator", "version", version, "buildDate", buildDate)
 
 	// if the enable-http2 flag is false (the default), http/2 should be disabled
 	// due to its vulnerabilities. More specifically, disabling http/2 will
@@ -195,7 +201,7 @@ func main() {
 		config.DNS().UpdaterURL(),
 		intercept.WithAuth("X-Auth", config.DNS().Credentials()),
 	)
-	client := g3.NewClient(dnsRestTransport)
+	dnsClient := g3.NewClient(dnsRestTransport)
 
 	if runInit {
 		initClient, err := ctrlclient.New(mgr.GetConfig(), ctrlclient.Options{Scheme: mgr.GetScheme()})
@@ -203,7 +209,8 @@ func main() {
 			setupLog.Error(err, "Failed to create client for init job")
 			os.Exit(1)
 		}
-		if err := initalize.Run(client, initClient); err != nil {
+
+		if err := initalize.Run(dnsClient, initClient); err != nil {
 			setupLog.Error(err, "init job failed")
 			os.Exit(1)
 		}
@@ -213,7 +220,7 @@ func main() {
 	if err := (&controller.GSLBServiceReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-		DNS:    client,
+		DNS:    dnsClient,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "gslbservice")
 		os.Exit(1)

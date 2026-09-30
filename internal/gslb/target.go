@@ -21,6 +21,7 @@ const (
 	KindHTTPRoute = "HTTPRoute"
 	KindTCPRoute  = "TCPRoute"
 	KindService   = "Service"
+	KindIngress   = "Ingress"
 )
 const (
 	viewsAnnotation    = "dns.nhn.no/override-infrastructure"

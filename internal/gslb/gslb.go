@@ -61,6 +61,8 @@ func For(c client.Client, gslb *v1alpha1.GSLBService) (Target, error) {
 		return &tcpRouteTarget{base: b}, nil
 	case KindService:
 		return &serviceTarget{base: b}, nil
+	case KindIngress:
+		return &ingressTarget{base: b}, nil
 	default:
 		return nil, fmt.Errorf("unsupported target kind %q", ref.Kind)
 	}
