@@ -30,14 +30,14 @@ func Run(dnsClient dns.Client, k8sClient client.Client) error {
 	if err := mergeConfig(context.Background(), k8sClient, interregator); err != nil {
 		return err
 	}
-
+	
 	return ensureDNSCredentials(context.Background(), k8sClient)
 }
 
+// +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
 func mergeConfig(ctx context.Context, k8sClient client.Client, interregator interregatortypes.ClusterInterregator) error {
 	cm := &corev1.ConfigMap{}
 	key := client.ObjectKey{Namespace: os.Getenv("POD_NAMESPACE"), Name: os.Getenv("GSLB_CONFIGMAP_NAME")}
-
 	datacenter := interregator.GetDatacenter()
 	clusterID := interregator.GetClusterId()
 	
