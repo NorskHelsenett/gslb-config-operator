@@ -1,0 +1,21 @@
+{{- if or (not (hasKey .Values.manager "enabled")) (.Values.manager.enabled) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gslb-config-operator-configmap
+data:
+  config.yaml: |
+    server:
+      logLevel: {{ .Values.config.server.logLevel }}
+    
+    dns:
+      {{- with .Values.config.dns }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+
+    auth:
+      {{- with .Values.config.auth }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
+
+{{- end}}
