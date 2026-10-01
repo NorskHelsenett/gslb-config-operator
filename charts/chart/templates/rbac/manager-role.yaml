@@ -13,6 +13,24 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  resourceNames:
+  - nhn-dns-updater
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - ""
+  resources:
   - services
   verbs:
   - get

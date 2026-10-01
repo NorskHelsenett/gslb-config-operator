@@ -18,7 +18,7 @@ import (
 )
 
 // +kubebuilder:rbac:groups="",resources=secrets,resourceNames=nhn-dns-updater,verbs=get;list;
-// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
+// +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch;patch
 func Run(dnsClient dns.Client, k8sClient client.Client) error {
 	restConfig := ctrl.GetConfigOrDie()
 	clientSet, err := kubernetes.NewForConfig(restConfig)
