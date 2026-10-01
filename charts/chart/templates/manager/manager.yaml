@@ -166,10 +166,10 @@ spec:
           {{- if .Values.manager.extraVolumeMounts }}
           {{- toYaml .Values.manager.extraVolumeMounts | nindent 10 }}
           {{- end }}
-          - mountPath: /secrets       
-            name: dns-updater-creds
+        - mountPath: /secrets
+          name: dns-updater-creds
         {{- if .Values.certManager.enable }}
-        - mountPath: /tmp/k8s-webhook-server/serving-certs   
+        - mountPath: /tmp/k8s-webhook-server/serving-certs
           name: webhook-certs
           readOnly: true
         {{- end }}
