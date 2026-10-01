@@ -45,7 +45,7 @@ manager:
     allowPrivilegeEscalation: false
     capabilities:
       drop:
-      - ALL
+        - ALL
     readOnlyRootFilesystem: true
 
   ## Resource limits and requests
@@ -177,7 +177,20 @@ webhook:
 prometheus:
   enable: false
 
-  initJob:
-    enabled: true
-    # Name of the ConfigMap containing config.yaml (required when enabled)
-    configMapName: ""
+initJob:
+  enabled: true
+  # Name of the ConfigMap containing config.yaml (required when enabled)
+  configMapName: ""
+
+config:
+  server:
+    logLevel: INFO
+  dns:
+    zone: ""
+    generation: G3
+    nameServers: []
+    updater: ""
+    zoneInfra: ""
+  auth:
+    issuer: gslb_config_operator
+    audience: gslb_operator
