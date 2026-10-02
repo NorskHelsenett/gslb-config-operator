@@ -30,7 +30,7 @@ func Run(dnsClient dns.Client, k8sClient client.Client) error {
 	if err := mergeConfig(context.Background(), k8sClient, interregator); err != nil {
 		return err
 	}
-	
+
 	return ensureDNSCredentials(context.Background(), k8sClient)
 }
 
@@ -40,7 +40,7 @@ func mergeConfig(ctx context.Context, k8sClient client.Client, interregator inte
 	key := client.ObjectKey{Namespace: os.Getenv("POD_NAMESPACE"), Name: os.Getenv("GSLB_CONFIGMAP_NAME")}
 	datacenter := interregator.GetDatacenter()
 	clusterID := interregator.GetClusterId()
-	
+
 	if err := k8sClient.Get(ctx, key, cm); err != nil {
 		if apierrors.IsNotFound(err) {
 			return fmt.Errorf("configmap %s not found", key)

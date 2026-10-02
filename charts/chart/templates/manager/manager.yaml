@@ -168,6 +168,11 @@ spec:
           {{- end }}
         - mountPath: /secrets
           name: dns-updater-creds
+        {{- if .Values.manager.initJob.configMapName }}
+        - mountPath: /app
+          name: config
+          readOnly: true
+        {{- end }}
         {{- if .Values.certManager.enable }}
         - mountPath: /tmp/k8s-webhook-server/serving-certs
           name: webhook-certs
@@ -189,6 +194,11 @@ spec:
         {{- end }}
       - name: dns-updater-creds
         emptyDir: {}
+      {{- if .Values.manager.initJob.configMapName }}
+      - name: config
+        configMap:
+          name: {{ .Values.manager.initJob.configMapName }}
+      {{- end }}
       {{- if .Values.certManager.enable }}
       - name: webhook-certs
         secret:
