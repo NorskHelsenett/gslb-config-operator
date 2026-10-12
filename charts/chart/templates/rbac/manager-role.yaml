@@ -32,6 +32,7 @@ rules:
   - secrets
   resourceNames:
   - nhn-dns-updater
+  - ror-apikey
   verbs:
   - get
   - list
