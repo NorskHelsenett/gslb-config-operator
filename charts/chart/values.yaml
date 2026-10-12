@@ -183,6 +183,8 @@ prometheus:
 config:
   server:
     logLevel: INFO
+    clusterID: ""
+    datacenter: ""
   dns:
     zone: ""
     generation: G3

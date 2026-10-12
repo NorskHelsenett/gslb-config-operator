@@ -87,7 +87,7 @@ jobs:
         run: |
           export HELM_VERSION=${VERSION#v*}
           ./yq e -i '.version = strenv(HELM_VERSION),.appVersion = strenv(VERSION)' charts/chart/Chart.yaml
-          ./yq e -i '.image.tag = strenv(HELM_VERSION),.image.repository = "ncr.sky.nhn.no/ghcr/norskhelsenett/gslb-config-operator"' charts/chart/values.yaml
+          ./yq e -i '.manager.image.tag = strenv(HELM_VERSION),.manager.image.repository = "ncr.sky.nhn.no/ghcr/norskhelsenett/gslb-config-operator"' charts/chart/values.yaml
           helm package charts/chart
           echo  ${{ secrets.GITHUB_TOKEN }} | helm registry login -u ${{ github.actor }} ghcr.io --password-stdin
           helm push gslb-config-operator-${HELM_VERSION}.tgz oci://ghcr.io/norskhelsenett/helm/
@@ -132,7 +132,7 @@ jobs:
         run: |
           export CHART_VERSION=${CHART_TAG#chart-v*}
           ./yq e -i '.version = strenv(CHART_VERSION),.appVersion = strenv(APP_TAG)' charts/chart/Chart.yaml
-          ./yq e -i '.image.tag = strenv(APP_VERSION),.image.repository = "ncr.sky.nhn.no/ghcr/norskhelsenett/gslb-config-operator"' charts/chart/values.yaml
+          ./yq e -i '.manager.image.tag = strenv(APP_VERSION),.manager.image.repository = "ncr.sky.nhn.no/ghcr/norskhelsenett/gslb-config-operator"' charts/chart/values.yaml
           helm package charts/chart
           echo  ${{ secrets.GITHUB_TOKEN }} | helm registry login -u ${{ github.actor }} ghcr.io --password-stdin
           helm push gslb-config-operator-${CHART_VERSION}.tgz oci://ghcr.io/norskhelsenett/helm/
