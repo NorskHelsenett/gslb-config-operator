@@ -37,13 +37,27 @@ func Run(dnsClient dns.Client, k8sClient client.Client) error {
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list
 func mergeConfig(ctx context.Context, k8sClient client.Client, interregator interregatortypes.ClusterInterregator) error {
 	cm := &corev1.ConfigMap{}
-	key := client.ObjectKey{Namespace: os.Getenv("POD_NAMESPACE"), Name: os.Getenv("GSLB_CONFIGMAP_NAME")}
+	cmKey := client.ObjectKey{Namespace: os.Getenv("POD_NAMESPACE"), Name: os.Getenv("GSLB_CONFIGMAP_NAME")}
 	datacenter := interregator.GetDatacenter()
-	clusterID := interregator.GetClusterId()
 
-	if err := k8sClient.Get(ctx, key, cm); err != nil {
+	secret := &corev1.Secret{}
+	secretKey := client.ObjectKey{Namespace: "nhn-ror", Name: "ror-apikey"}
+	if err := k8sClient.Get(ctx, secretKey, secret); err != nil {
 		if apierrors.IsNotFound(err) {
-			return fmt.Errorf("configmap %s not found", key)
+			return fmt.Errorf("secret %s not found", secretKey)
+		}
+		return fmt.Errorf("fetching updater secret: %w", err)
+	}
+
+	id, ok := secret.Data["CLUSTER_ID"]
+	if !ok {
+		return fmt.Errorf("secret key: CLUSTER_ID not found")
+	}
+	clusterID := string(id)
+
+	if err := k8sClient.Get(ctx, cmKey, cm); err != nil {
+		if apierrors.IsNotFound(err) {
+			return fmt.Errorf("configmap %s not found", cmKey)
 		}
 		return fmt.Errorf("fetching configmap: %w", err)
 	}
@@ -51,7 +65,7 @@ func mergeConfig(ctx context.Context, k8sClient client.Client, interregator inte
 	doc := map[string]any{}
 	if raw, ok := cm.Data["config.yaml"]; ok {
 		if err := yaml.Unmarshal([]byte(raw), &doc); err != nil {
-			return fmt.Errorf("parsing configmap %s: %w", key, err)
+			return fmt.Errorf("parsing configmap %s: %w", cmKey, err)
 		}
 	}
 
@@ -80,7 +94,7 @@ func mergeConfig(ctx context.Context, k8sClient client.Client, interregator inte
 	cm.Data["config.yaml"] = string(merged)
 
 	if err := k8sClient.Patch(ctx, cm, patch); err != nil {
-		return fmt.Errorf("patching config map %s: %w", key, err)
+		return fmt.Errorf("patching config map %s: %w", cmKey, err)
 	}
 
 	return nil
