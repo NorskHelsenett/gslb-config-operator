@@ -98,7 +98,11 @@ func (r *GSLBServiceReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 		r.reconcileConfig,
 	}
 	if config.DNS().Gen() == config.G3 {
-		reconcilers = append(reconcilers, r.reconcileG3Record, r.reconcileG3NSRecords)
+		reconcilers = append(reconcilers, r.reconcileG3Record)
+	}
+
+	if config.GSLB().DelegationMode() == config.GSLBDelegationModeNS {
+		reconcilers = append(reconcilers, r.reconcileG3NSRecords)
 	}
 
 	rc := &reconcileContext{service: svc}
@@ -118,8 +122,8 @@ func (r *GSLBServiceReconciler) ensureConfigZoneID() error {
 	}
 
 	configZone, err := r.DNS.Zones().Read(
-		zones.WithFQDN(config.DNS().Zone()),
-		zones.WithInfrastructure(config.DNS().ZoneInfra()),
+		zones.WithFQDN(config.GSLB().Zone()),
+		zones.WithInfrastructure(config.GSLB().ZoneInfra()),
 	)
 	if err != nil {
 		return err
@@ -143,7 +147,7 @@ func (r *GSLBServiceReconciler) deleteRecord(ctx context.Context, svc *v1alpha1.
 
 	recordRequests, err := r.DNS.Records().Read(
 		records.WithZoneID(configZoneID),
-		records.WithRecordName(fmt.Sprintf("%s.%s.", svc.Status.Member.ID, config.DNS().Zone())),
+		records.WithRecordName(fmt.Sprintf("%s.%s.", svc.Status.Member.ID, config.GSLB().Zone())),
 	)
 	if err != nil {
 		return fmt.Errorf("read config records: %w", err)

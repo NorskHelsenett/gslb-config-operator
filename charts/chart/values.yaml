@@ -186,11 +186,14 @@ config:
     clusterID: ""
     datacenter: ""
   dns:
-    zone: ""
     generation: G3
     nameServers: []
     updater: ""
+  gslb:
+    delegationMode: ""
+    zone: ""
     zoneInfra: ""
+
   auth:
     issuer: gslb_config_operator
     audience: gslb_operator

@@ -13,6 +13,11 @@ data:
       {{- with .Values.config.dns }}
       {{- toYaml . | nindent 6 }}
       {{- end }}
+    
+    gslb:
+      {{- with .Values.config.gslb }}
+      {{- toYaml . | nindent 6 }}
+      {{- end }}
 
     auth:
       {{- with .Values.config.auth }}

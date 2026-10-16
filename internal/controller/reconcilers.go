@@ -113,7 +113,7 @@ func (r *GSLBServiceReconciler) reconcileG3Record(ctx context.Context, rc *recon
 
 	recordRequests, err := r.DNS.Records().Read(
 		records.WithZoneID(configZoneID),
-		records.WithRecordName(fmt.Sprintf("%s.%s.", rc.config.ServiceID, config.DNS().Zone())),
+		records.WithRecordName(fmt.Sprintf("%s.%s.", rc.config.ServiceID, config.GSLB().Zone())),
 	)
 	if err != nil {
 		setCondition(svc, conditionProgrammed, metav1.ConditionFalse, "RecordLookupFailed", err.Error())
@@ -127,7 +127,7 @@ func (r *GSLBServiceReconciler) reconcileG3Record(ctx context.Context, rc *recon
 	}
 
 	desired := &dns.TXT{
-		Hdr: dns.Header{Name: fmt.Sprintf("%s.%s.", rc.config.ServiceID, config.DNS().Zone())},
+		Hdr: dns.Header{Name: fmt.Sprintf("%s.%s.", rc.config.ServiceID, config.GSLB().Zone())},
 		Txt: []string{string(rawConfig)},
 	}
 

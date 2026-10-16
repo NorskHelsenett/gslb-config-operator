@@ -12,6 +12,7 @@ type Config struct {
 	Auth auth   `mapstructure:"auth"`
 	SRV  server `mapstructure:"server"`
 	Dns  dns    `mapstructure:"dns"`
+	Gslb gslb   `mapstructure:"gslb"`
 }
 
 func Server() *server {
@@ -24,6 +25,10 @@ func Auth() *auth {
 
 func DNS() *dns {
 	return &cfg.Dns
+}
+
+func GSLB() *gslb {
+	return &cfg.Gslb
 }
 
 type auth struct {
@@ -40,20 +45,10 @@ func (a *auth) Audience() string {
 }
 
 type dns struct {
-	ZONE         string   `mapstructure:"zone"`
-	ZONE_INFRA   string   `mapstructure:"zoneInfra"`
 	Generation   string   `mapstructure:"generation"`
 	Updater      string   `mapstructure:"updater"`
 	UpdaterCreds string   `mapstructure:"updaterCreds"`
 	NAMESERVERS  []string `mapstructure:"nameServers"`
-}
-
-func (d *dns) Zone() string {
-	return d.ZONE
-}
-
-func (d *dns) ZoneInfra() string {
-	return d.ZONE_INFRA
 }
 
 type DNSGeneration string
@@ -109,6 +104,31 @@ func (s *server) LogLevel() slog.Level {
 	default:
 		return slog.LevelDebug
 	}
+}
+
+type DelegationMode string
+
+const (
+	GSLBDelegationModeNS   DelegationMode = "NS"
+	GSLBDelegationModeNone DelegationMode = "none"
+)
+
+type gslb struct {
+	GSLBDelegationMode DelegationMode `mapstructure:"delegationMode"`
+	ZONE               string         `mapstructure:"zone"`
+	ZONE_INFRA         string         `mapstructure:"zoneInfra"`
+}
+
+func (g *gslb) DelegationMode() DelegationMode {
+	return g.GSLBDelegationMode
+}
+
+func (g *gslb) Zone() string {
+	return g.ZONE
+}
+
+func (g *gslb) ZoneInfra() string {
+	return g.ZONE_INFRA
 }
 
 func init() {

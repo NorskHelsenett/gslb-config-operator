@@ -93,7 +93,7 @@ func mergeConfig(ctx context.Context, k8sClient client.Client, interregator inte
 	}
 	cm.Data["config.yaml"] = string(merged)
 
-	if err := k8sClient.Patch(ctx, cm, patch); err != nil {
+	if err := k8sClient.Patch(ctx, cm, patch, client.FieldOwner("gslb-config-operator")); err != nil {
 		return fmt.Errorf("patching config map %s: %w", cmKey, err)
 	}
 
