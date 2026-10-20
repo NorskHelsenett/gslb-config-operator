@@ -101,9 +101,9 @@ spec:
                         type: string
                       lua:
                         description: |-
-                          lua is a custom Lua script run on each health check.
+                          Lua is a custom Lua script run on each health check.
                           "status_code" (int), "headers" (map) and "body" (string) are available as script variables.
-                          Not compatible with HealthChecks of kind TCP-FULL or TCP-HALF.
+                          Not compatible with HealthChecks of Kind TCP-FULL or TCP-HALF.
 
                           Examples:
                           Check for 2xx status code:
