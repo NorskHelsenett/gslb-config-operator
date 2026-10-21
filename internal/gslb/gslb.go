@@ -95,7 +95,7 @@ func BuildConfig(c client.Client, gslb *v1alpha1.GSLBService, member *Member) (*
 			cfg.Script = &script
 		} else if hc.LuaRef != nil {
 			configMap := corev1.ConfigMap{}
-			err := c.Get(context.Background(), client.ObjectKey{Name: hc.LuaRef.TargetRef}, &configMap)
+			err := c.Get(context.Background(), client.ObjectKey{Name: hc.LuaRef.TargetRef, Namespace: gslb.Namespace}, &configMap)
 			if err != nil {
 				return nil, fmt.Errorf("failed to resolve lua configmap reference: %w", err)
 			}
