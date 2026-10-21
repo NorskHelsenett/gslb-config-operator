@@ -106,13 +106,13 @@ type HealthChecks struct {
 	Path *string `json:"path,omitempty"`
 }
 
-// LuaReference references a Lua script stored in another object.
+// LuaReference references a Lua script stored in a ConfigMap.
 type LuaReference struct {
-	// targetRef is the kind of object holding the script.
+	// targetRef is the name of the ConfigMap holding the script; it must exist in the GSLBService's namespace.
 	// +required
 	TargetRef string `json:"targetRef"`
 
-	// key is the data key that holds the script.
+	// key is the ConfigMap data key that holds the script.
 	// +required
 	Key string `json:"key"`
 }

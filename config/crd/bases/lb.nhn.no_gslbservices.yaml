@@ -126,11 +126,12 @@ spec:
                           another object.
                         properties:
                           key:
-                            description: key is the data key that holds the script.
+                            description: key is the ConfigMap data key that holds
+                              the script.
                             type: string
                           targetRef:
-                            description: targetRef is the kind of object holding the
-                              script.
+                            description: targetRef is the name of the ConfigMap holding
+                              the script; it must exist in the GSLBService's namespace.
                             type: string
                         required:
                         - key
