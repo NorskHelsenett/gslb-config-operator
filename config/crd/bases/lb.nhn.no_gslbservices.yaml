@@ -86,8 +86,13 @@ spec:
                         minimum: 1
                         type: integer
                       kind:
-                        description: kind is the health check type; derived from targetRef
-                          or lua when unset.
+                        description: |-
+                          kind is the health check type; derived from targetRef or lua when unset.
+                          Defaults derived from target refs:
+                            HTTPRoute: HTTPS healthcheck, healthy when the response status is 2xx
+                            Ingress:   HTTPS healthcheck, healthy when the response status is 2xx
+                            Service:   TCP-FULL healthcheck, healthy when the TCP handshake completes
+                            TCPRoute:  TCP-FULL healthcheck, healthy when the TCP handshake completes
                         enum:
                         - HTTPS
                         - TCP-FULL
@@ -95,18 +100,38 @@ spec:
                         - LUA
                         type: string
                       lua:
-                        description: lua is an inline Lua health check function.
+                        description: |-
+                          Lua is a custom Lua script run on each health check.
+                          "status_code" (int), "headers" (map) and "body" (string) are available as script variables.
+                          Not compatible with HealthChecks of Kind TCP-FULL or TCP-HALF.
+
+                          Examples:
+                          Check for 2xx status code:
+                            return status_code >= 200 and status_code < 400
+
+                          Check body for "healthy":
+                            return status_code == 200 and string.find(body, "healthy") ~= nil
+
+                          Check status and header:
+                            return status_code == 200 and headers["Content-Type"] == "application/json"
+
+                          Complex check with multiple conditions:
+                            local status_ok = status_code >= 200 and status_code < 300
+                            local has_json = headers["Content-Type"] == "application/json"
+                            local valid_body = string.find(body, '"status":"ok"') ~= nil
+                            return status_ok and has_json and valid_body, "reason why the health check failed"
                         type: string
                       luaRef:
                         description: luaRef references a Lua health check stored in
                           another object.
                         properties:
                           key:
-                            description: key is the data key that holds the script.
+                            description: key is the ConfigMap data key that holds
+                              the script.
                             type: string
                           targetRef:
-                            description: targetRef is the kind of object holding the
-                              script.
+                            description: targetRef is the name of the ConfigMap holding
+                              the script; it must exist in the GSLBService's namespace.
                             type: string
                         required:
                         - key

@@ -65,7 +65,25 @@ type HealthChecks struct {
 	// +optional
 	FailureThreshold *int `json:"failureThreshold,omitempty"`
 
-	// lua is an inline Lua health check function.
+	// Lua is a custom Lua script run on each health check.
+	// "status_code" (int), "headers" (map) and "body" (string) are available as script variables.
+	// Not compatible with HealthChecks of Kind TCP-FULL or TCP-HALF.
+	//
+	// Examples:
+	// Check for 2xx status code:
+	//   return status_code >= 200 and status_code < 400
+	//
+	// Check body for "healthy":
+	//   return status_code == 200 and string.find(body, "healthy") ~= nil
+	//
+	// Check status and header:
+	//   return status_code == 200 and headers["Content-Type"] == "application/json"
+	//
+	// Complex check with multiple conditions:
+	//   local status_ok = status_code >= 200 and status_code < 300
+	//   local has_json = headers["Content-Type"] == "application/json"
+	//   local valid_body = string.find(body, '"status":"ok"') ~= nil
+	//   return status_ok and has_json and valid_body, "reason why the health check failed"
 	// +optional
 	Lua *string `json:"lua,omitempty"`
 
@@ -74,6 +92,11 @@ type HealthChecks struct {
 	LuaRef *LuaReference `json:"luaRef,omitempty"`
 
 	// kind is the health check type; derived from targetRef or lua when unset.
+	// Defaults derived from target refs:
+	//   HTTPRoute: HTTPS healthcheck, healthy when the response status is 2xx
+	//   Ingress:   HTTPS healthcheck, healthy when the response status is 2xx
+	//   Service:   TCP-FULL healthcheck, healthy when the TCP handshake completes
+	//   TCPRoute:  TCP-FULL healthcheck, healthy when the TCP handshake completes
 	// +kubebuilder:validation:Enum=HTTPS;TCP-FULL;TCP-HALF;LUA
 	// +optional
 	Kind string `json:"kind,omitempty"`
@@ -83,13 +106,13 @@ type HealthChecks struct {
 	Path *string `json:"path,omitempty"`
 }
 
-// LuaReference references a Lua script stored in another object.
+// LuaReference references a Lua script stored in a ConfigMap.
 type LuaReference struct {
-	// targetRef is the kind of object holding the script.
+	// targetRef is the name of the ConfigMap holding the script; it must exist in the GSLBService's namespace.
 	// +required
 	TargetRef string `json:"targetRef"`
 
-	// key is the data key that holds the script.
+	// key is the ConfigMap data key that holds the script.
 	// +required
 	Key string `json:"key"`
 }
