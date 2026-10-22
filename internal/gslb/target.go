@@ -101,7 +101,7 @@ func (b base) resolveParentAddress(ctx context.Context, routeNamespace string, p
 func gatewayStatusAddress(addresses []gatewayv1.GatewayStatusAddress) (models.Address, error) {
 	switch len(addresses) {
 	case 0:
-		return models.Address{}, nil
+		return models.Address{}, errors.New("Target parent gateway does not have a valid IP address")
 	case 1:
 		addr := models.Address{IPFamily: "SingleStack"}
 		ip, err := netip.ParseAddr(addresses[0].Value)
