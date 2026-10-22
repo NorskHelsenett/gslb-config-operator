@@ -2,6 +2,7 @@ package gslb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/netip"
 	"strconv"
@@ -51,7 +52,10 @@ func (t *serviceTarget) Address(ctx context.Context) (models.Address, error) {
 	switch svc.Spec.Type {
 	case "LoadBalancer":
 		addr := models.Address{}
-		if len(svc.Status.LoadBalancer.Ingress) == 1 {
+		switch len(svc.Status.LoadBalancer.Ingress) {
+		case 0:
+			return models.Address{}, errors.New("Target service does not have a valid IP address")
+		case 1:
 			addr.IPFamily = "SingleStack"
 
 			ip, err := netip.ParseAddr(string(svc.Status.LoadBalancer.Ingress[0].IP))
@@ -60,6 +64,8 @@ func (t *serviceTarget) Address(ctx context.Context) (models.Address, error) {
 			}
 
 			addr.IPv4 = &ip
+		default:
+			return models.Address{}, errors.New("Multiple IP-s on Service not supported")
 		}
 
 		return addr, nil
